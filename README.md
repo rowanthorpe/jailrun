@@ -23,12 +23,23 @@ a customized firejail.
 Installation
 ------------
 
-Ensure `firejail` is installed with a profile for `skypeforlinux` (the
-latest Debian packages include the profile by default). Then copy
-or symlink `jailskype` into your $PATH. To change the window-size of
-the launched Xephyr screen edit the `xephyr-screen` value in the
-firejail config (which is `/etc/firejail/firejail.config` for me in
-Debian).
+* Ensure `firejail` is installed with a profile for `skypeforlinux` (the
+  latest Debian packages include the profile by default).
+
+* You *must* hack the skypeforlinux shellscript wrapper (as distributed
+  as part of skypeforlinux) so that it doesn't background the invocation
+  of the executable (e.g. "nohup XX &" -> "XX"). If you prefer not to
+  edit the upstream wrapper and to work around it by using pgrep/wait in
+  `jailscript` instead, then feel free (but then it's a lot of extra
+  work instead of a 1-line micro-edit). Either way you *must* prevent
+  the skype invocation from backgrounding or this wrapper will then kill
+  it and exit.
+
+* Copy or symlink `jailskype` into your $PATH.
+
+* To change the window-size of the launched Xephyr screen edit the
+  `xephyr-screen` value in the firejail config (which is
+  `/etc/firejail/firejail.config` for me in Debian).
 
 Quick Start
 -----------

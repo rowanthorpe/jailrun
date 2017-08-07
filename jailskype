@@ -23,15 +23,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-# NB:
-# * I hacked the skypeforlinux shellscript wrapper (as distributed as part
-#   of skypeforlinux) so that it doesn't background the invocation of the
-#   executable (e.g. "nohup XX &" -> "XX"). If you prefer not to edit the
-#   upstream wrapper to work around that by using pgrep/wait here instead,
-#   then feel free (but then it's a lot of extra work instead of a 1-line
-#   micro-edit). Either way you *must* prevent the skype invocation from
-#   backgrounding or this wrapper will then kill it and exit.
-
 sj_version='0.1.0'
 sj_verbose='0'
 sj_debug='0'
