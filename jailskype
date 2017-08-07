@@ -1,0 +1,137 @@
+#!/bin/sh
+
+# jailskype:
+#   Start skypeforlinux in a customized firejail
+#   (originally based on https://spwhitton.name/blog/entry/firejailskype/)
+#
+# Copyright © 2017 Rowan Thorpe <rowan@rowanthorpe.com>
+#
+# Any additional contributions are noted in the AUTHORS.md file.
+
+# This file is part of jailskype.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+# NB:
+# * I hacked the skypeforlinux shellscript wrapper (as distributed as part
+#   of skypeforlinux) so that it doesn't background the invocation of the
+#   executable (e.g. "nohup XX &" -> "XX"). If you prefer not to edit the
+#   upstream wrapper to work around that by using pgrep/wait here instead,
+#   then feel free (but then it's a lot of extra work instead of a 1-line
+#   micro-edit). Either way you *must* prevent the skype invocation from
+#   backgrounding or this wrapper will then kill it and exit.
+
+sj_version='0.1.0'
+sj_verbose='0'
+sj_debug='0'
+sj_sleep='0.2'
+sj_logfile=''
+sj_fakehome=''
+sj_home="${HOME}"; test -n "${sj_home}" || sj_home=~; sj_home="${sj_home%%/}"
+
+while test ${#} -ne 0; do
+    case "${1}" in
+        -h|--help|--usage)
+            cat <<EOF
+Usage: jailskype [OPTION]...
+Start skypeforlinux in a customized firejail
+
+  -v, --verbose     Show program output
+  -d, --debug       Display each command before executing
+  -s, --sleep-time  Time to sleep after skype closes before closing openbox
+  -l, --log-file X  Filename to log to instead of stdout
+  -H, --fake-home X Directory to use as fake \$HOME
+                    (def: ${sj_home}/jailskype-homedir)
+  -h, --help        This message
+  -V, --version     Show version of this wrapper
+
+Home page: https://github.com/rowanthorpe/jailskype
+EOF
+            exit 0
+            ;;
+        -V|--version)
+            cat <<EOF
+jailskype ${sj_version}
+Copyright (C) 2017 Rowan Thorpe
+
+License GPLv3+: GNU GPL 3 or later <http://gnu.org/licenses/gpl.html>.
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+EOF
+            exit 0
+            ;;
+	-v|--verbose)
+	    sj_verbose=1
+	    shift
+	    ;;
+	-d|--debug)
+	    sj_debug=1
+	    shift
+	    ;;
+	-s|--sleep-time)
+	    sj_sleep="${2}"
+	    shift 2
+	    ;;
+	-l|--log-file)
+	    sj_logfile="${2}"
+	    shift 2
+	    ;;
+	-H|--fake-home)
+	    sj_fakehome="${2}"
+	    shift 2
+	    ;;
+	--)
+	    shift
+	    break
+	    ;;
+	-*)
+	    printf 'Unknown optflag "%s"\n' "${1}" >&2
+	    exit 1
+	    ;;
+	*)
+	    break
+	    ;;
+    esac
+done
+
+## setup
+
+sj_fakehome="${sj_fakehome:-${sj_home}/jailskype-homedir}"
+sj_prefix="firejail --private=\"${sj_fakehome}\" --private-tmp"
+test -n "${sj_logfile}" || sj_logfile='/dev/stdout'
+exec </dev/null >"${sj_logfile}" 2>&1
+
+## functions
+
+doit() {
+    ! test 1 = "${sj_debug}" || printf '\n ==> %s\n\n' "${1}"
+    if test 1 = "${sj_verbose}"; then
+        eval "${1}"
+    else
+        eval "${1}" >/dev/null 2>&1
+    fi
+}
+
+# main
+
+mkdir -p "${sj_fakehome}"
+doit "${sj_prefix} --net=none --x11=xephyr openbox &"
+while /bin/sleep 0.2; do ## Loop until new ${DISPLAY} found
+    sj_display="$(firemon --x11 | sed -n -e 's/^ \+DISPLAY \+//' -e 't P' -e 'b' -e ':P' -e 'p' -e 'q')"
+    test -z "${sj_display}" || break
+done
+sj_prefix="DISPLAY=\"${sj_display}\" ${sj_prefix}"
+doit "${sj_prefix} --blacklist=/run/user/\$(id -u)/dconf/user --net=eth0 skypeforlinux"
+/bin/sleep "${sj_sleep}" # Hope this is enough time for skype to finish cleaning up
+doit "${sj_prefix} --net=none openbox --exit"
