@@ -27,6 +27,9 @@ Installation
   latest Debian packages include the profile by default in
   `/etc/firejail/`).
 
+* Ensure `openbox` (or whatever compatible window-manager you specify
+  with the `-w` flag) is installed.
+
 * You *must* hack the skypeforlinux shellscript wrapper (as distributed
   as part of skypeforlinux) so that it doesn't background the invocation
   of the executable (e.g. "nohup XX &" -> "XX"). If you prefer not to
