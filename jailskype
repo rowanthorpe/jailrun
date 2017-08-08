@@ -32,6 +32,8 @@ js_sleep='0.2'
 js_logfile=''
 js_fakehome=''
 js_home="${HOME}"; test -n "${js_home}" || js_home=~; js_home="${js_home%%/}"
+js_logfile_def='/dev/stdout'
+js_fakehome_def="${js_home}/jailskype-homedir"
 
 ## functions
 
@@ -56,9 +58,10 @@ Start skypeforlinux in a customized firejail
   -v, --verbose     Show program output
   -d, --debug       Display each command before executing
   -s, --sleep-time  Time to sleep after skype closes before closing openbox
-  -l, --log-file X  Filename to log to instead of stdout
+  -l, --log-file X  Filename to log to
+                    (def: ${js_logfile_def})
   -H, --fake-home X Directory to use as fake \$HOME
-                    (def: ${js_home}/jailskype-homedir)
+                    (def: ${js_fakehome_def})
   -h, --help        This message
   -V, --version     Show version of this wrapper
 
@@ -89,12 +92,12 @@ EOF
         *)               break ;;
     esac
 done
+js_logfile="${js_logfile:-${js_logfile_def}}"
+js_fakehome="${js_fakehome:-${js_fakehome_def}}"
 
 ## setup
 
-js_fakehome="${js_fakehome:-${js_home}/jailskype-homedir}"
 js_prefix="firejail --private=\"${js_fakehome}\" --private-tmp"
-test -n "${js_logfile}" || js_logfile='/dev/stdout'
 exec </dev/null >"${js_logfile}" 2>&1
 
 # main
