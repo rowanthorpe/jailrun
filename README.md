@@ -24,7 +24,8 @@ Installation
 ------------
 
 * Ensure `firejail` is installed with a profile for `skypeforlinux` (the
-  latest Debian packages include the profile by default).
+  latest Debian packages include the profile by default in
+  `/etc/firejail/`).
 
 * You *must* hack the skypeforlinux shellscript wrapper (as distributed
   as part of skypeforlinux) so that it doesn't background the invocation
