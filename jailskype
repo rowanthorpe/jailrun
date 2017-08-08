@@ -23,6 +23,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+## config
+
 js_version='0.1.0'
 js_verbose='0'
 js_debug='0'
@@ -30,6 +32,19 @@ js_sleep='0.2'
 js_logfile=''
 js_fakehome=''
 js_home="${HOME}"; test -n "${js_home}" || js_home=~; js_home="${js_home%%/}"
+
+## functions
+
+doit() {
+    ! test 1 = "${js_debug}" || printf '\n ==> %s\n\n' "${1}"
+    if test 1 = "${js_verbose}"; then
+        eval "${1}"
+    else
+        eval "${1}" >/dev/null 2>&1
+    fi
+}
+
+## getopts
 
 while test ${#} -ne 0; do
     case "${1}" in
@@ -81,17 +96,6 @@ js_fakehome="${js_fakehome:-${js_home}/jailskype-homedir}"
 js_prefix="firejail --private=\"${js_fakehome}\" --private-tmp"
 test -n "${js_logfile}" || js_logfile='/dev/stdout'
 exec </dev/null >"${js_logfile}" 2>&1
-
-## functions
-
-doit() {
-    ! test 1 = "${js_debug}" || printf '\n ==> %s\n\n' "${1}"
-    if test 1 = "${js_verbose}"; then
-        eval "${1}"
-    else
-        eval "${1}" >/dev/null 2>&1
-    fi
-}
 
 # main
 
